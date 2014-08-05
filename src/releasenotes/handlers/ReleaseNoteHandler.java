@@ -27,7 +27,7 @@ public class ReleaseNoteHandler extends AbstractHandler {
 		IWorkbenchWindow window = HandlerUtil.getActiveWorkbenchWindowChecked(event);
 		MessageDialog.openInformation(
 				window.getShell(),
-				"ReleaseNotes",
+				"Release Notes",
 				"Release notes");
 		return null;
 	}

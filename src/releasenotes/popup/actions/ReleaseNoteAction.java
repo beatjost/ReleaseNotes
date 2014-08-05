@@ -31,7 +31,7 @@ public class ReleaseNoteAction implements IObjectActionDelegate {
 	public void run(IAction action) {
 		MessageDialog.openInformation(
 			shell,
-			"ReleaseNotes",
+			"Release Notes",
 			"Action was executed.");
 	}
 

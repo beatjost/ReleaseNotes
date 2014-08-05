@@ -1,15 +1,21 @@
 package releasenotes.views;
 
 
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.eclipse.core.filesystem.EFS;
+import org.eclipse.core.filesystem.IFileStore;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.IMenuListener;
-import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
-import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.InputDialog;
-import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelection;
@@ -27,9 +33,16 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.ISharedImages;
-import org.eclipse.ui.IWorkbenchActionConstants;
+import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.ide.IDE;
 import org.eclipse.ui.part.ViewPart;
+import org.eclipse.ui.plugin.AbstractUIPlugin;
+
+import releasenotes.Activator;
+import releasenotes.preferences.PreferenceConstants;
 
 
 /**
@@ -59,8 +72,7 @@ public class ReleaseNotesView extends ViewPart {
 
 	private TableViewer viewer;
 	private Action actionNew;
-	private Action actionEdit;
-	private Action actionDelete;
+	private Action actionRefresh;
 	private Action doubleClickAction;
 
 	/*
@@ -72,14 +84,14 @@ public class ReleaseNotesView extends ViewPart {
 	 * it and always show the same content 
 	 * (like Task List, for example).
 	 */
-	 
+
 	class ViewContentProvider implements IStructuredContentProvider {
 		public void inputChanged(Viewer v, Object oldInput, Object newInput) {
 		}
 		public void dispose() {
 		}
 		public Object[] getElements(Object parent) {
-			return new String[] { "Release 1", "Release 2" };
+			return getFileNames();
 		}
 	}
 	class ViewLabelProvider extends LabelProvider implements ITableLabelProvider {
@@ -91,7 +103,7 @@ public class ReleaseNotesView extends ViewPart {
 		}
 		public Image getImage(Object obj) {
 			return PlatformUI.getWorkbench().
-					getSharedImages().getImage(ISharedImages.IMG_OBJ_ELEMENT);
+					getSharedImages().getImage(ISharedImages.IMG_OBJ_FILE);
 		}
 	}
 	class NameSorter extends ViewerSorter {
@@ -122,11 +134,6 @@ public class ReleaseNotesView extends ViewPart {
 	private void hookContextMenu() {
 		MenuManager menuMgr = new MenuManager("#PopupMenu");
 		menuMgr.setRemoveAllWhenShown(true);
-		menuMgr.addMenuListener(new IMenuListener() {
-			public void menuAboutToShow(IMenuManager manager) {
-				ReleaseNotesView.this.fillContextMenu(manager);
-			}
-		});
 		Menu menu = menuMgr.createContextMenu(viewer.getControl());
 		viewer.getControl().setMenu(menu);
 		getSite().registerContextMenu(menuMgr, viewer);
@@ -134,74 +141,87 @@ public class ReleaseNotesView extends ViewPart {
 
 	private void contributeToActionBars() {
 		IActionBars bars = getViewSite().getActionBars();
-		fillLocalPullDown(bars.getMenuManager());
 		fillLocalToolBar(bars.getToolBarManager());
 	}
 
-	private void fillLocalPullDown(IMenuManager manager) {
-		manager.add(actionNew);
-		manager.add(new Separator());
-		manager.add(actionEdit);
-		manager.add(new Separator());
-		manager.add(actionDelete);
-	}
-
-	private void fillContextMenu(IMenuManager manager) {
-		manager.add(actionEdit);
-		manager.add(actionDelete);
-		// Other plug-ins can contribute there actions here
-		manager.add(new Separator(IWorkbenchActionConstants.MB_ADDITIONS));
-	}
-	
 	private void fillLocalToolBar(IToolBarManager manager) {
 		manager.add(actionNew);
+		manager.add(actionRefresh);
 	}
 
 	private void makeActions() {
+		
+		// -------------------------------------------------------------------------------------------------------
+		
 		actionNew = new Action() {
 			public void run() {
-	              InputDialog dialog = new InputDialog(getViewSite().getShell(),"New file",
-	              			"Enter file name","",null); // new input dialog
-	              if( dialog.open()== IStatus.OK){ // open dialog and wait for return status code.
-	              					// If user clicks ok display message box
-	                  String value = dialog.getValue(); // fetch the value entered by the user.
-	                  MessageBox box = new MessageBox(getViewSite().getShell(),SWT.ICON_INFORMATION);
-	                  box.setMessage("File name : " + value);
-	                  box.open();
-	              }else{
-	                  MessageBox box = new MessageBox(getViewSite().getShell(),SWT.ICON_INFORMATION);
-	                  box.setMessage("No file!");
-	                  box.open();
-	              }
+				InputDialog dialog = new InputDialog(getViewSite().getShell(),"New file",
+						"Enter releasenote file name (project_r1)","",null); 
+				if( dialog.open()== IStatus.OK){ 
+					StringBuilder filePath= new StringBuilder();
+					String path= Activator.getDefault().getPreferenceStore().getString(PreferenceConstants.P_PATH);
+					String fileName = dialog.getValue();
+					filePath.append(path).append("\\").append(fileName).append(".txt");
+					File file= new File(filePath.toString());
+					try {
+						file.createNewFile();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				viewer.refresh();
+				}else{
+					MessageBox box = new MessageBox(getViewSite().getShell(),SWT.ICON_INFORMATION);
+					box.setMessage("No file!");
+					box.open();
+				}
 			}
 		};
+		actionNew.setText("New");
+		actionNew.setToolTipText("Create new releasenote");
+		actionNew.setImageDescriptor(PlatformUI.getWorkbench().getSharedImages().
+				getImageDescriptor(ISharedImages.IMG_OBJ_ADD));
 		
-		actionEdit = new Action() {
-			public void run() {
-				showMessage("Edit");
-			}
-		};
-		actionEdit.setText("Edit");
-		actionEdit.setToolTipText("Edit this entry");
-		actionEdit.setImageDescriptor(PlatformUI.getWorkbench().getSharedImages().
-			getImageDescriptor(ISharedImages.IMG_OBJS_INFO_TSK));
+		// -------------------------------------------------------------------------------------------------------
 		
-		actionDelete = new Action() {
+		actionRefresh= new Action() {
 			public void run() {
-				showMessage("Delete");
+				viewer.refresh();
 			}
 		};
-		actionDelete.setText("Delete");
-		actionDelete.setToolTipText("Delete this entry");
-		actionDelete.setImageDescriptor(PlatformUI.getWorkbench().getSharedImages().
-				getImageDescriptor(ISharedImages.IMG_OBJS_INFO_TSK));
+		actionRefresh.setText("Refresh");
+		actionRefresh.setToolTipText("Refresh the list.");
+		ImageDescriptor icon= AbstractUIPlugin.imageDescriptorFromPlugin("ReleaseNotes", "icons/refresh.gif");
+		actionRefresh.setImageDescriptor(icon);
+		
+		// -------------------------------------------------------------------------------------------------------
+		
 		doubleClickAction = new Action() {
 			public void run() {
-				ISelection selection = viewer.getSelection();
-				Object obj = ((IStructuredSelection)selection).getFirstElement();
-				showMessage("Double-click detected on "+obj.toString());
+				openFile();
 			}
 		};
+	}
+	
+	private void openFile() {
+		ISelection selection = viewer.getSelection();
+		Object obj = ((IStructuredSelection)selection).getFirstElement();
+		StringBuilder filePath= new StringBuilder();
+		String path= Activator.getDefault().getPreferenceStore().getString(PreferenceConstants.P_PATH);
+		String fileName = obj.toString();
+		filePath.append(path).append("\\").append(fileName);
+		File fileToOpen= new File(filePath.toString());
+		
+		
+		IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+		IWorkbenchPage page = window.getActivePage();
+		
+		IPath location= Path.fromOSString(fileToOpen.getAbsolutePath()); 
+		IFileStore ifile= EFS.getLocalFileSystem().getStore(location);
+		try {
+			IDE.openEditorOnFileStore(page, ifile);
+		} catch (PartInitException e) {
+			e.printStackTrace();
+		}
 	}
 
 	private void hookDoubleClickAction() {
@@ -211,17 +231,37 @@ public class ReleaseNotesView extends ViewPart {
 			}
 		});
 	}
-	private void showMessage(String message) {
-		MessageDialog.openInformation(
-			viewer.getControl().getShell(),
-			"ReleaseNotes View",
-			message);
-	}
 
 	/**
 	 * Passing the focus request to the viewer's control.
 	 */
 	public void setFocus() {
 		viewer.getControl().setFocus();
+	}
+
+	private File[] getFilesOfFolder(String path){
+		File folder = new File(path);
+		return folder.listFiles() == null ? new File[0] : folder.listFiles(); 
+	}
+	
+	private String[] getFileNames(){
+		String path= Activator.getDefault().getPreferenceStore().getString(PreferenceConstants.P_PATH);
+		File[] listOfFiles= getFilesOfFolder(path);
+		String files;
+		List<String> fileNames= new ArrayList<String>();
+		
+		for (int i = 0; i < listOfFiles.length; i++) 
+		{
+
+			if (listOfFiles[i].isFile()) 
+			{
+				files = listOfFiles[i].getName();
+				if (files.endsWith(".txt") || files.endsWith(".TXT"))
+				{
+					fileNames.add(files);
+				}
+			}
+		}
+		return (String[])fileNames.toArray(new String[listOfFiles.length]);
 	}
 }
