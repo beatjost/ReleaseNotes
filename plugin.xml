@@ -44,20 +44,6 @@
       </initializer>
    </extension>
    <extension
-         point="org.eclipse.ui.propertyPages">
-      <page
-            name="ReleaseNotes"
-            nameFilter="*.*"
-            class="releasenotes.properties.ReleaseNotePropertyPage"
-            id="releasenotes.properties.samplePropertyPage">
-         <enabledWhen>
-            <instanceof
-                  value="org.eclipse.core.resources.IFile">
-            </instanceof>
-         </enabledWhen>
-      </page>
-   </extension>
-   <extension
          point="org.eclipse.ui.views">
       <category
             name="Release Notes"
@@ -82,12 +68,6 @@
                id="releasenotes.views.ReleaseNotesView">
          </view>
       </perspectiveExtension>
-   </extension>
-   <extension
-         point="org.eclipse.help.contexts">
-      <contexts
-            file="contexts.xml">
-      </contexts>
    </extension>
 
 </plugin>

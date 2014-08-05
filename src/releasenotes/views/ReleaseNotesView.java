@@ -1,6 +1,5 @@
 package releasenotes.views;
 
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -30,7 +29,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
-import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.IWorkbenchPage;
@@ -44,7 +42,6 @@ import org.eclipse.ui.plugin.AbstractUIPlugin;
 import releasenotes.Activator;
 import releasenotes.preferences.PreferenceConstants;
 
-
 /**
  * This sample class demonstrates how to plug-in a new
  * workbench view. The view shows data obtained from the
@@ -53,13 +50,9 @@ import releasenotes.preferences.PreferenceConstants;
  * available either in this or another plug-in (e.g. the workspace).
  * The view is connected to the model using a content provider.
  * <p>
- * The view uses a label provider to define how model
- * objects should be presented in the view. Each
- * view can present the same model objects using
- * different labels and icons, if needed. Alternatively,
- * a single label provider can be shared between views
- * in order to ensure that objects of the same type are
- * presented in the same way everywhere.
+ * The view uses a label provider to define how model objects should be presented in the view. Each view can present the
+ * same model objects using different labels and icons, if needed. Alternatively, a single label provider can be shared
+ * between views in order to ensure that objects of the same type are presented in the same way everywhere.
  * <p>
  */
 
@@ -81,31 +74,36 @@ public class ReleaseNotesView extends ViewPart {
 	 * existing objects in adapters or simply return
 	 * objects as-is. These objects may be sensitive
 	 * to the current input of the view, or ignore
-	 * it and always show the same content 
+	 * it and always show the same content
 	 * (like Task List, for example).
 	 */
 
 	class ViewContentProvider implements IStructuredContentProvider {
 		public void inputChanged(Viewer v, Object oldInput, Object newInput) {
 		}
+
 		public void dispose() {
 		}
+
 		public Object[] getElements(Object parent) {
 			return getFileNames();
 		}
 	}
+
 	class ViewLabelProvider extends LabelProvider implements ITableLabelProvider {
 		public String getColumnText(Object obj, int index) {
 			return getText(obj);
 		}
+
 		public Image getColumnImage(Object obj, int index) {
 			return getImage(obj);
 		}
+
 		public Image getImage(Object obj) {
-			return PlatformUI.getWorkbench().
-					getSharedImages().getImage(ISharedImages.IMG_OBJ_FILE);
+			return PlatformUI.getWorkbench().getSharedImages().getImage(ISharedImages.IMG_OBJ_FILE);
 		}
 	}
+
 	class NameSorter extends ViewerSorter {
 	}
 
@@ -124,7 +122,6 @@ public class ReleaseNotesView extends ViewPart {
 		viewer.setInput(getViewSite());
 
 		// Create the help context id for the viewer's control
-		PlatformUI.getWorkbench().getHelpSystem().setHelp(viewer.getControl(), "ReleaseNotes.viewer");
 		makeActions();
 		hookContextMenu();
 		hookDoubleClickAction();
@@ -150,73 +147,68 @@ public class ReleaseNotesView extends ViewPart {
 	}
 
 	private void makeActions() {
-		
+
 		// -------------------------------------------------------------------------------------------------------
-		
+
 		actionNew = new Action() {
 			public void run() {
-				InputDialog dialog = new InputDialog(getViewSite().getShell(),"New file",
-						"Enter releasenote file name (project_r1)","",null); 
-				if( dialog.open()== IStatus.OK){ 
-					StringBuilder filePath= new StringBuilder();
-					String path= Activator.getDefault().getPreferenceStore().getString(PreferenceConstants.P_PATH);
+				InputDialog dialog = new InputDialog(getViewSite().getShell(), "New file",
+						"Enter a release note file name (e.g. 'projectname_release#')", "", null);
+				if (dialog.open() == IStatus.OK) {
+					StringBuilder filePath = new StringBuilder();
+					String path = Activator.getDefault().getPreferenceStore().getString(PreferenceConstants.P_PATH);
 					String fileName = dialog.getValue();
 					filePath.append(path).append("\\").append(fileName).append(".txt");
-					File file= new File(filePath.toString());
+					File file = new File(filePath.toString());
 					try {
 						file.createNewFile();
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
-				viewer.refresh();
-				}else{
-					MessageBox box = new MessageBox(getViewSite().getShell(),SWT.ICON_INFORMATION);
-					box.setMessage("No file!");
-					box.open();
+					viewer.refresh();
 				}
 			}
 		};
 		actionNew.setText("New");
 		actionNew.setToolTipText("Create new releasenote");
-		actionNew.setImageDescriptor(PlatformUI.getWorkbench().getSharedImages().
-				getImageDescriptor(ISharedImages.IMG_OBJ_ADD));
-		
+		actionNew.setImageDescriptor(PlatformUI.getWorkbench().getSharedImages()
+				.getImageDescriptor(ISharedImages.IMG_OBJ_ADD));
+
 		// -------------------------------------------------------------------------------------------------------
-		
-		actionRefresh= new Action() {
+
+		actionRefresh = new Action() {
 			public void run() {
 				viewer.refresh();
 			}
 		};
 		actionRefresh.setText("Refresh");
 		actionRefresh.setToolTipText("Refresh the list.");
-		ImageDescriptor icon= AbstractUIPlugin.imageDescriptorFromPlugin("ReleaseNotes", "icons/refresh.gif");
+		ImageDescriptor icon = AbstractUIPlugin.imageDescriptorFromPlugin("ReleaseNotes", "icons/refresh.gif");
 		actionRefresh.setImageDescriptor(icon);
-		
+
 		// -------------------------------------------------------------------------------------------------------
-		
+
 		doubleClickAction = new Action() {
 			public void run() {
 				openFile();
 			}
 		};
 	}
-	
+
 	private void openFile() {
 		ISelection selection = viewer.getSelection();
-		Object obj = ((IStructuredSelection)selection).getFirstElement();
-		StringBuilder filePath= new StringBuilder();
-		String path= Activator.getDefault().getPreferenceStore().getString(PreferenceConstants.P_PATH);
+		Object obj = ((IStructuredSelection) selection).getFirstElement();
+		StringBuilder filePath = new StringBuilder();
+		String path = Activator.getDefault().getPreferenceStore().getString(PreferenceConstants.P_PATH);
 		String fileName = obj.toString();
 		filePath.append(path).append("\\").append(fileName);
-		File fileToOpen= new File(filePath.toString());
-		
-		
+		File fileToOpen = new File(filePath.toString());
+
 		IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
 		IWorkbenchPage page = window.getActivePage();
-		
-		IPath location= Path.fromOSString(fileToOpen.getAbsolutePath()); 
-		IFileStore ifile= EFS.getLocalFileSystem().getStore(location);
+
+		IPath location = Path.fromOSString(fileToOpen.getAbsolutePath());
+		IFileStore ifile = EFS.getLocalFileSystem().getStore(location);
 		try {
 			IDE.openEditorOnFileStore(page, ifile);
 		} catch (PartInitException e) {
@@ -239,29 +231,27 @@ public class ReleaseNotesView extends ViewPart {
 		viewer.getControl().setFocus();
 	}
 
-	private File[] getFilesOfFolder(String path){
+	private File[] getFilesOfFolder(String path) {
 		File folder = new File(path);
-		return folder.listFiles() == null ? new File[0] : folder.listFiles(); 
+		return folder.listFiles() == null ? new File[0] : folder.listFiles();
 	}
-	
-	private String[] getFileNames(){
-		String path= Activator.getDefault().getPreferenceStore().getString(PreferenceConstants.P_PATH);
-		File[] listOfFiles= getFilesOfFolder(path);
-		String files;
-		List<String> fileNames= new ArrayList<String>();
-		
-		for (int i = 0; i < listOfFiles.length; i++) 
-		{
 
-			if (listOfFiles[i].isFile()) 
-			{
+	private String[] getFileNames() {
+		String path = Activator.getDefault().getPreferenceStore().getString(PreferenceConstants.P_PATH);
+		File[] listOfFiles = getFilesOfFolder(path);
+		String files;
+		List<String> fileNames = new ArrayList<String>();
+
+		for (int i = 0; i < listOfFiles.length; i++) {
+
+			if (listOfFiles[i].isFile()) {
 				files = listOfFiles[i].getName();
-				if (files.endsWith(".txt") || files.endsWith(".TXT"))
-				{
+				if (files.endsWith(".txt") || files.endsWith(".TXT")) {
 					fileNames.add(files);
 				}
 			}
 		}
-		return (String[])fileNames.toArray(new String[listOfFiles.length]);
+		int size = fileNames == null ? 0 : fileNames.size();
+		return (String[]) fileNames.toArray(new String[size]);
 	}
 }
