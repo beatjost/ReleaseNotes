@@ -3,33 +3,6 @@
 <plugin>
 
    <extension
-         point="org.eclipse.ui.decorators">
-      <decorator
-            lightweight="true"
-            location="BOTTOM_RIGHT"
-            adaptable="true"
-            label="Resource Decorator"
-            icon="icons/releasenotes.gif"
-            state="true"
-            id="ReleaseNotes.decorator">
-         <enablement>
-            <and>
-               <objectClass
-                     name="org.eclipse.core.resources.IResource">
-               </objectClass>
-               <or>
-                  <objectClass
-                        name="org.eclipse.core.resources.IProject">
-                  </objectClass>
-                  <objectClass
-                        name="org.eclipse.core.resources.IFile">
-                  </objectClass>
-               </or>
-            </and>
-         </enablement>
-      </decorator>
-   </extension>
-   <extension
          point="org.eclipse.ui.preferencePages">
       <page
             name="Release Notes"
