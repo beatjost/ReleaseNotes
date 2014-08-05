@@ -30,34 +30,6 @@
       </decorator>
    </extension>
    <extension
-         point="org.eclipse.ui.commands">
-      <category
-            name="Sample Category"
-            id="ReleaseNotes.commands.category">
-      </category>
-      <command
-            name="Sample Command"
-            categoryId="ReleaseNotes.commands.category"
-            id="ReleaseNotes.commands.sampleCommand">
-      </command>
-   </extension>
-   <extension
-         point="org.eclipse.ui.handlers">
-      <handler
-            commandId="ReleaseNotes.commands.sampleCommand"
-            class="releasenotes.handlers.ReleaseNoteHandler">
-      </handler>
-   </extension>
-   <extension
-         point="org.eclipse.ui.bindings">
-      <key
-            commandId="ReleaseNotes.commands.sampleCommand"
-            contextId="org.eclipse.ui.contexts.window"
-            sequence="M1+6"
-            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration">
-      </key>
-   </extension>
-   <extension
          point="org.eclipse.ui.preferencePages">
       <page
             name="Release Notes"
