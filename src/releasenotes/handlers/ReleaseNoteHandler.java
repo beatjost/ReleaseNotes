@@ -13,9 +13,7 @@ import org.eclipse.jface.dialogs.MessageDialog;
  * @see org.eclipse.core.commands.AbstractHandler
  */
 public class ReleaseNoteHandler extends AbstractHandler {
-	/**
-	 * The constructor.
-	 */
+
 	public ReleaseNoteHandler() {
 	}
 
