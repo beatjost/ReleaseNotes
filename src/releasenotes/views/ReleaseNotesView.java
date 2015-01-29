@@ -231,6 +231,8 @@ public class ReleaseNotesView extends ViewPart {
 			}
 		};
 		actionEditFileName.setText("Rename");
+		actionEditFileName.setImageDescriptor(PlatformUI.getWorkbench().getSharedImages()
+				.getImageDescriptor(ISharedImages.IMG_OBJ_FILE));
 
 		// -------------------------------------------------------------------------------------------------------
 
@@ -241,7 +243,7 @@ public class ReleaseNotesView extends ViewPart {
 				String fileName = obj.toString();
 				MessageDialog dialog = new MessageDialog(getViewSite().getShell(), "Delete file", null,
 						"Do you really want to delete file '" + fileName + "'", MessageDialog.CONFIRM, new String[] {
-								"OK", "Cancel" }, 1);
+								"Delete", "Cancel" }, 1);
 				if (dialog.open() == IStatus.OK) {
 					String path = Activator.getDefault().getPreferenceStore().getString(PreferenceConstants.P_PATH);
 					File file = new File(path.concat("\\" + fileName));
@@ -251,6 +253,8 @@ public class ReleaseNotesView extends ViewPart {
 			}
 		};
 		actionDeleteFile.setText("Delete");
+		actionDeleteFile.setImageDescriptor(PlatformUI.getWorkbench().getSharedImages()
+				.getImageDescriptor(ISharedImages.IMG_TOOL_DELETE));
 	}
 
 	private void openFile() {
