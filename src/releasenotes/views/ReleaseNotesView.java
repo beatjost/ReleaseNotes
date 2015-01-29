@@ -11,9 +11,12 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IMenuListener;
+import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.dialogs.InputDialog;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -67,6 +70,8 @@ public class ReleaseNotesView extends ViewPart {
 	private Action actionNew;
 	private Action actionRefresh;
 	private Action doubleClickAction;
+	private Action actionEditFileName;
+	private Action actionDeleteFile;
 
 	/*
 	 * The content provider class is responsible for
@@ -131,6 +136,11 @@ public class ReleaseNotesView extends ViewPart {
 	private void hookContextMenu() {
 		MenuManager menuMgr = new MenuManager("#PopupMenu");
 		menuMgr.setRemoveAllWhenShown(true);
+		menuMgr.addMenuListener(new IMenuListener() {
+			public void menuAboutToShow(IMenuManager mgr) {
+				fillContextMenu(mgr);
+			}
+		});
 		Menu menu = menuMgr.createContextMenu(viewer.getControl());
 		viewer.getControl().setMenu(menu);
 		getSite().registerContextMenu(menuMgr, viewer);
@@ -144,6 +154,12 @@ public class ReleaseNotesView extends ViewPart {
 	private void fillLocalToolBar(IToolBarManager manager) {
 		manager.add(actionNew);
 		manager.add(actionRefresh);
+	}
+
+	private void fillContextMenu(IMenuManager mgr) {
+		mgr.add(actionEditFileName);
+		mgr.add(actionDeleteFile);
+		//mgr.add(new Separator());
 	}
 
 	private void makeActions() {
@@ -193,6 +209,48 @@ public class ReleaseNotesView extends ViewPart {
 				openFile();
 			}
 		};
+
+		// -------------------------------------------------------------------------------------------------------
+
+		actionEditFileName = new Action() {
+			public void run() {
+				ISelection selection = viewer.getSelection();
+				Object obj = ((IStructuredSelection) selection).getFirstElement();
+				String fileName = obj.toString();
+				InputDialog dialog = new InputDialog(getViewSite().getShell(), "Edit filename", "", fileName, null);
+				if (dialog.open() == IStatus.OK) {
+					StringBuilder filePath = new StringBuilder();
+					String path = Activator.getDefault().getPreferenceStore().getString(PreferenceConstants.P_PATH);
+					filePath.append(path).append("\\");
+					File file = new File(filePath.toString().concat(fileName));
+					if (file.exists()) {
+						file.renameTo(new File(filePath.toString().concat(dialog.getValue())));
+					}
+					viewer.refresh();
+				}
+			}
+		};
+		actionEditFileName.setText("Rename");
+
+		// -------------------------------------------------------------------------------------------------------
+
+		actionDeleteFile = new Action() {
+			public void run() {
+				ISelection selection = viewer.getSelection();
+				Object obj = ((IStructuredSelection) selection).getFirstElement();
+				String fileName = obj.toString();
+				MessageDialog dialog = new MessageDialog(getViewSite().getShell(), "Delete file", null,
+						"Do you really want to delete file '" + fileName + "'", MessageDialog.CONFIRM, new String[] {
+								"OK", "Cancel" }, 1);
+				if (dialog.open() == IStatus.OK) {
+					String path = Activator.getDefault().getPreferenceStore().getString(PreferenceConstants.P_PATH);
+					File file = new File(path.concat("\\" + fileName));
+					file.delete();
+					viewer.refresh();
+				}
+			}
+		};
+		actionDeleteFile.setText("Delete");
 	}
 
 	private void openFile() {
