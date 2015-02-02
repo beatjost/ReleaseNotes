@@ -17,6 +17,11 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.preference.IPreferenceNode;
+import org.eclipse.jface.preference.IPreferencePage;
+import org.eclipse.jface.preference.PreferenceDialog;
+import org.eclipse.jface.preference.PreferenceManager;
+import org.eclipse.jface.preference.PreferenceNode;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -44,6 +49,7 @@ import org.eclipse.ui.plugin.AbstractUIPlugin;
 
 import releasenotes.Activator;
 import releasenotes.preferences.PreferenceConstants;
+import releasenotes.preferences.ReleaseNotePreferencePage;
 
 /**
  * This sample class demonstrates how to plug-in a new
@@ -69,6 +75,7 @@ public class ReleaseNotesView extends ViewPart {
 	private TableViewer viewer;
 	private Action actionNew;
 	private Action actionRefresh;
+	private Action actionPreference;
 	private Action doubleClickAction;
 	private Action actionEditFileName;
 	private Action actionDeleteFile;
@@ -154,6 +161,7 @@ public class ReleaseNotesView extends ViewPart {
 	private void fillLocalToolBar(IToolBarManager manager) {
 		manager.add(actionNew);
 		manager.add(actionRefresh);
+		manager.add(actionPreference);
 	}
 
 	private void fillContextMenu(IMenuManager mgr) {
@@ -201,6 +209,18 @@ public class ReleaseNotesView extends ViewPart {
 		actionRefresh.setToolTipText("Refresh the list.");
 		ImageDescriptor icon = AbstractUIPlugin.imageDescriptorFromPlugin("ReleaseNotes", "icons/refresh.gif");
 		actionRefresh.setImageDescriptor(icon);
+
+		// -------------------------------------------------------------------------------------------------------
+
+		actionPreference = new Action() {
+			public void run() {
+				openPreferencePage();
+			}
+		};
+		actionPreference.setText("Preferences");
+		actionPreference.setToolTipText("Set preferences.");
+		actionPreference.setImageDescriptor(PlatformUI.getWorkbench().getSharedImages()
+				.getImageDescriptor(ISharedImages.IMG_OBJS_INFO_TSK));
 
 		// -------------------------------------------------------------------------------------------------------
 
@@ -291,6 +311,17 @@ public class ReleaseNotesView extends ViewPart {
 	 */
 	public void setFocus() {
 		viewer.getControl().setFocus();
+	}
+
+	private void openPreferencePage() {
+		IPreferencePage page = new ReleaseNotePreferencePage();
+		PreferenceManager mgr = new PreferenceManager();
+		IPreferenceNode node = new PreferenceNode("1", page);
+		mgr.addToRoot(node);
+		PreferenceDialog dialog = new PreferenceDialog(getViewSite().getShell(), mgr);
+		dialog.create();
+		dialog.setMessage(page.getTitle());
+		dialog.open();
 	}
 
 	private File[] getFilesOfFolder(String path) {
