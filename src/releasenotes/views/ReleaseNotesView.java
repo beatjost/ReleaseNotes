@@ -81,15 +81,10 @@ public class ReleaseNotesView extends ViewPart {
 	private Action actionDeleteFile;
 
 	/*
-	 * The content provider class is responsible for
-	 * providing objects to the view. It can wrap
-	 * existing objects in adapters or simply return
-	 * objects as-is. These objects may be sensitive
-	 * to the current input of the view, or ignore
-	 * it and always show the same content
-	 * (like Task List, for example).
+	 * The content provider class is responsible for providing objects to the view. It can wrap existing
+	 * objects in adapters or simply return objects as-is. These objects may be sensitive to the current
+	 * input of the view, or ignore it and always show the same content (like Task List, for example).
 	 */
-
 	class ViewContentProvider implements IStructuredContentProvider {
 		public void inputChanged(Viewer v, Object oldInput, Object newInput) {
 		}
